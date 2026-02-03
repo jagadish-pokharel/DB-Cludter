@@ -1,0 +1,27 @@
+services:
+  db_primary:
+    image: postgres:15
+    container_name: postgres_primary
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    networks:
+      - db_network
+
+  db_replica:
+    image: postgres:15
+    container_name: postgres_replica
+    # THIS LINE IS THE KEY:
+    volumes:
+      - ./replica_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=password123
+      - POSTGRES_HOST_AUTH_METHOD=trust
+    networks:
+      - db_network
+
+networks:
+  db_network:
+    driver: bridge
