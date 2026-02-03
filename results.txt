@@ -1,0 +1,72 @@
+ node_id | upstream_node_id | active | node_name |  type   | location | priority
+ |                                        conninfo                              
+           | repluser |   slot_name   |             config_file              
+---------+------------------+--------+-----------+---------+----------+---------
+-+------------------------------------------------------------------------------
+-----------+----------+---------------+--------------------------------------
+       2 |                  | t      | pg-1      | primary | default  |      100
+ | user=repmgr password=repmgrpassword host=pg-1 dbname=repmgr port=5432 connect
+_timeout=5 | repmgr   | repmgr_slot_2 | /opt/bitnami/repmgr/conf/repmgr.conf
+       1 |                2 | t      | pg-0      | standby | default  |      100
+ | user=repmgr password=repmgrpassword host=pg-0 dbname=repmgr port=5432 connect
+_timeout=5 | repmgr   | repmgr_slot_1 | /opt/bitnami/repmgr/conf/repmgr.conf
+(2 rows)
+
+
+
+
+
+
+
+
+
+
+[7m--More--[K(END)[27m[K
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[7m--More--[K(END)[27m[K
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+[7m--More--[K(END)[27m[K
+...skipping 1 line
+

@@ -1,27 +1,35 @@
 services:
-  db_primary:
-    image: postgres:15
-    container_name: postgres_primary
+  pg-0:
+    image: bitnamilegacy/postgresql-repmgr:15
+    container_name: pg-0
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password123
-      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRESQL_PASSWORD=adminpassword
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_NODE_NAME=pg-0
+      - REPMGR_NODE_ID=1
+      - REPMGR_NODE_NETWORK_NAME=pg-0
     networks:
-      - db_network
+      - pg-network
 
-  db_replica:
-    image: postgres:15
-    container_name: postgres_replica
-    # THIS LINE IS THE KEY:
-    volumes:
-      - ./replica_data:/var/lib/postgresql/data
+  pg-1:
+    image: bitnamilegacy/postgresql-repmgr:15
+    container_name: pg-1
+    depends_on:
+      - pg-0
     environment:
-      - POSTGRES_USER=admin
-      - POSTGRES_PASSWORD=password123
-      - POSTGRES_HOST_AUTH_METHOD=trust
+      - POSTGRESQL_PRIMARY_HOST=pg-0
+      - POSTGRESQL_PASSWORD=adminpassword
+      - REPMGR_PASSWORD=repmgrpassword
+      - REPMGR_PRIMARY_HOST=pg-0
+      - REPMGR_PARTNER_NODES=pg-0,pg-1
+      - REPMGR_NODE_NAME=pg-1
+      - REPMGR_NODE_ID=2
+      - REPMGR_NODE_NETWORK_NAME=pg-1
     networks:
-      - db_network
+      - pg-network
 
 networks:
-  db_network:
+  pg-network:
     driver: bridge
