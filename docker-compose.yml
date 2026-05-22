@@ -1,34 +1,164 @@
+version: '3.9'
+
 services:
+
   pg-0:
     image: bitnamilegacy/postgresql-repmgr:15
     container_name: pg-0
+    restart: always
+
     environment:
-      - POSTGRESQL_PASSWORD=adminpassword
-      - REPMGR_PASSWORD=repmgrpassword
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=mydb
+
+      - REPMGR_PASSWORD=${REPMGR_PASSWORD}
       - REPMGR_PRIMARY_HOST=pg-0
       - REPMGR_PARTNER_NODES=pg-0,pg-1
       - REPMGR_NODE_NAME=pg-0
       - REPMGR_NODE_ID=1
       - REPMGR_NODE_NETWORK_NAME=pg-0
+
+      - REPMGR_FAILOVER=automatic
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - pg0-data:/bitnami/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
     networks:
       - pg-network
 
   pg-1:
     image: bitnamilegacy/postgresql-repmgr:15
     container_name: pg-1
+    restart: always
+
     depends_on:
       - pg-0
+
     environment:
+      - POSTGRESQL_POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_USERNAME=postgres
+      - POSTGRESQL_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRESQL_DATABASE=mydb
+
       - POSTGRESQL_PRIMARY_HOST=pg-0
-      - POSTGRESQL_PASSWORD=adminpassword
-      - REPMGR_PASSWORD=repmgrpassword
+
+      - REPMGR_PASSWORD=${REPMGR_PASSWORD}
       - REPMGR_PRIMARY_HOST=pg-0
       - REPMGR_PARTNER_NODES=pg-0,pg-1
       - REPMGR_NODE_NAME=pg-1
       - REPMGR_NODE_ID=2
       - REPMGR_NODE_NETWORK_NAME=pg-1
+
+      - REPMGR_FAILOVER=automatic
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - pg1-data:/bitnami/postgresql
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
     networks:
       - pg-network
+
+  haproxy:
+    image: haproxy:latest
+    container_name: haproxy
+    restart: always
+
+    depends_on:
+      - pg-0
+      - pg-1
+
+    ports:
+      - "5000:5000"
+
+    volumes:
+      - ./haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg
+
+    networks:
+      - pg-network
+
+  postgres-exporter:
+    image: prometheuscommunity/postgres-exporter
+    container_name: postgres-exporter
+    restart: always
+
+    environment:
+      DATA_SOURCE_NAME: "postgresql://postgres:${POSTGRES_PASSWORD}@pg-0:5432/postgres?sslmode=disable"
+
+    ports:
+      - "9187:9187"
+
+    depends_on:
+      - pg-0
+
+    networks:
+      - pg-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    restart: always
+
+    ports:
+      - "9090:9090"
+
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+    networks:
+      - pg-network
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    restart: always
+
+    ports:
+      - "3000:3000"
+
+    volumes:
+      - grafana-data:/var/lib/grafana
+
+    networks:
+      - pg-network
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin123
+
+    ports:
+      - "8080:80"
+
+    networks:
+      - pg-network
+
+volumes:
+  pg0-data:
+  pg1-data:
+  grafana-data:
 
 networks:
   pg-network:
